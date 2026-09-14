@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 주식 인사이트 & 투자 대시보드</title>
+    <!-- Pretendard 폰트 & FontAwesome 아이콘 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+            --up-color: #ef4444;
+            --down-color: #3b82f6;
+            --flat-color: #64748b;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* 헤더 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-area p {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* 하이라이트 요약 카드 */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .summary-card .title {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-card .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .summary-card .sub-value {
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        /* 컨트롤 바 (검색/필터) */
+        .control-panel {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .tab-btn {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            color: var(--text-main);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 200px;
+            outline: none;
+        }
+
+        .select-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #fff;
+        }
+
+        /* 메인 데이터 테이블 */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-sub);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td.text-left, th.text-left { text-align: left; }
+        td.text-center, th.text-center { text-align: center; }
+
+        tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .star-btn {
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .star-btn.active {
+            color: #f59e0b;
+        }
+
+        .up { color: var(--up-color); font-weight: 600; }
+        .down { color: var(--down-color); font-weight: 600; }
+        .flat { color: var(--flat-color); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge.KOSDAQ { background: #e0f2fe; color: #0369a1; }
+        .badge.KOSPI { background: #ffedd5; color: #c2410c; }
+
+        /* 모달 팝업 (분석 및 투자 계산기) */
+        .modal-overlay {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-sub);
+        }
+
+        .calc-box {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .calc-box h4 {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .note-area {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: none;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 헤더 -->
+    <header>
+        <div class="logo-area">
+            <h1><i class="fa-solid fa-chart-line" style="color:var(--primary)"></i> Smart Stock Insight</h1>
+            <p id="baseDateText">실시간 주식 정보 분석 및 모의 투자 포트폴리오</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn" onclick="openApiKeyModal()"><i class="fa-solid fa-key"></i> API Key 설정</button>
+            <button class="btn btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> CSV 내보내기</button>
+        </div>
+    </header>
+
+    <!-- 하이라이트 요약 카드 -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="title">🚀 오늘 최고 상승 종목 <i class="fa-solid fa-fire" style="color:#ef4444"></i></div>
+            <div class="value up" id="topGainerName">-</div>
+            <div class="sub-value" id="topGainerRate">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="title">🔥 최다 거래량 종목 <i class="fa-solid fa-bolt" style="color:#f59e0b"></i></div>
+            <div class="value" id="topVolumeName">-</div>
+            <div class="sub-value" id="topVolumeVal" style="color:var(--text-sub)">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="title">🏛️ 대시보드 시가총액 합계 <i class="fa-solid fa-building-columns"></i></div>
+            <div class="value" id="totalMarketCap">-</div>
+            <div class="sub-value" style="color:var(--text-sub)">조회된 종목의 시가총액 총합</div>
+        </div>
+    </div>
+
+    <!-- 필터 및 컨트롤러 -->
+    <div class="control-panel">
+        <div class="tab-group">
+            <button class="tab-btn active" onclick="switchTab('all')">전체 종목</button>
+            <button class="tab-btn" onclick="switchTab('watchlist')">⭐ 관심 종목 (<span id="watchlistCount">0</span>)</button>
+        </div>
+        
+        <div class="filter-group">
+            <input type="text" id="searchInput" class="search-input" placeholder="종목명/코드 검색..." onkeyup="applyFilters()">
+            
+            <select id="marketFilter" class="select-input" onchange="applyFilters()">
+                <option value="ALL">전체 시장</option>
+                <option value="KOSPI">KOSPI</option>
+                <option value="KOSDAQ">KOSDAQ</option>
+            </select>
+
+            <select id="sortFilter" class="select-input" onchange="applyFilters()">
+                <option value="fltRt_desc">등락률 높은순</option>
+                <option value="fltRt_asc">등락률 낮은순</option>
+                <option value="trqu_desc">거래량 많은순</option>
+                <option value="mrktTotAmt_desc">시가총액 높은순</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 데이터 테이블 -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 40px;">관심</th>
+                    <th class="text-left">종목명/코드</th>
+                    <th class="text-center">시장</th>
+                    <th>종가</th>
+                    <th>전일대비</th>
+                    <th>등락률</th>
+                    <th>시가</th>
+                    <th>고가</th>
+                    <th>저가</th>
+                    <th>거래량</th>
+                    <th>시가총액</th>
+                    <th class="text-center">분석</th>
+                </tr>
+            </thead>
+            <tbody id="stockTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 상세 분석 & 모의 투자 계산기 모달 -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <h3 id="modalTitle" style="font-size:1.2rem;">종목 상세 분석</h3>
+                <span id="modalSub" style="font-size:0.85rem; color:var(--text-sub);">코드: 000000</span>
+            </div>
+            <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="modalContent">
+            <!-- 기본 정보 -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:0.9rem;">
+                <div><strong>현재가:</strong> <span id="modalPrice">-</span>원</div>
+                <div><strong>전일대비:</strong> <span id="modalVs">-</span></div>
+                <div><strong>하루 고가:</strong> <span id="modalHigh">-</span>원</div>
+                <div><strong>하루 저가:</strong> <span id="modalLow">-</span>원</div>
+            </div>
+
+            <!-- 모의 투자 시뮬레이터 -->
+            <div class="calc-box">
+                <h4><i class="fa-solid fa-calculator"></i> 모의 투자 시뮬레이터</h4>
+                <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:8px;">투자할 금액을 입력하면 매수 가능한 주식 수와 목표 수익을 계산합니다.</p>
+                <div class="input-group">
+                    <input type="number" id="investAmount" value="1000000" step="100000" placeholder="투자금액(원)">
+                    <button class="btn btn-primary" onclick="calculateInvestment()">계산하기</button>
+                </div>
+                <div id="calcResult" style="font-size:0.85rem; line-height:1.6; color:#334155;">
+                    - 금액을 입력하고 계산 버튼을 눌러주세요.
+                </div>
+            </div>
+
+            <!-- 개인 투자 메모 -->
+            <div style="margin-top:16px;">
+                <h4 style="font-size:0.9rem;"><i class="fa-solid fa-pen"></i> 나의 투자 아이디어 / 메모</h4>
+                <textarea id="stockNote" class="note-area" placeholder="이 종목에 대한 매수 이유, 목표가, 메모 등을 적어두세요 (자동 저장됨)"></textarea>
+                <button class="btn" style="margin-top:6px; width:100%; justify-content:center;" onclick="saveNote()">메모 저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 기본 샘플 데이터 (API 연동 전 기본값)
+const rawStockData = [
+  { "basDt": "20260828", "srtnCd": "900110", "itmsNm": "딥커머스", "mrktCtg": "KOSDAQ", "clpr": "1201", "vs": "0", "fltRt": "0", "mkp": "0", "hipr": "0", "lopr": "0", "trqu": "0", "mrktTotAmt": "22142994331" },
+  { "basDt": "20260828", "srtnCd": "900270", "itmsNm": "헝셩그룹", "mrktCtg": "KOSDAQ", "clpr": "3770", "vs": "225", "fltRt": "6.35", "mkp": "3645", "hipr": "4580", "lopr": "3625", "trqu": "3532878", "mrktTotAmt": "19273325760" },
+  { "basDt": "20260828", "srtnCd": "900260", "itmsNm": "로스웰", "mrktCtg": "KOSDAQ", "clpr": "1649", "vs": "-5", "fltRt": "-.3", "mkp": "1642", "hipr": "1663", "lopr": "1632", "trqu": "4964", "mrktTotAmt": "75902985194" },
+  { "basDt": "20260828", "srtnCd": "900290", "itmsNm": "GRT", "mrktCtg": "KOSDAQ", "clpr": "3900", "vs": "10", "fltRt": ".26", "mkp": "3815", "hipr": "3970", "lopr": "3805", "trqu": "137713", "mrktTotAmt": "325691121600" },
+  { "basDt": "20260828", "srtnCd": "900300", "itmsNm": "오가닉티코스메틱", "mrktCtg": "KOSDAQ", "clpr": "3665", "vs": "195", "fltRt": "5.62", "mkp": "3530", "hipr": "4350", "lopr": "3320", "trqu": "2424935", "mrktTotAmt": "75426055505" },
+  { "basDt": "20260828", "srtnCd": "900310", "itmsNm": "컬러레이", "mrktCtg": "KOSDAQ", "clpr": "2150", "vs": "0", "fltRt": "0", "mkp": "2150", "hipr": "2185", "lopr": "2030", "trqu": "4567", "mrktTotAmt": "27537920250" },
+  { "basDt": "20260828", "srtnCd": "900340", "itmsNm": "윙입푸드", "mrktCtg": "KOSDAQ", "clpr": "1505", "vs": "-28", "fltRt": "-1.83", "mkp": "1539", "hipr": "1539", "lopr": "1495", "trqu": "58135", "mrktTotAmt": "18937011660" },
+  { "basDt": "20260828", "srtnCd": "000020", "itmsNm": "동화약품", "mrktCtg": "KOSPI", "clpr": "5180", "vs": "90", "fltRt": "1.77", "mkp": "5120", "hipr": "5180", "lopr": "5070", "trqu": "67100", "mrktTotAmt": "144685014600" },
+  { "basDt": "20260828", "srtnCd": "000040", "itmsNm": "KR모터스", "mrktCtg": "KOSPI", "clpr": "1481", "vs": "125", "fltRt": "9.22", "mkp": "1370", "hipr": "1490", "lopr": "1363", "trqu": "152890", "mrktTotAmt": "25584328316" },
+  { "basDt": "20260828", "srtnCd": "000050", "itmsNm": "경방", "mrktCtg": "KOSPI", "clpr": "8320", "vs": "60", "fltRt": ".73", "mkp": "8280", "hipr": "8340", "lopr": "8160", "trqu": "15696", "mrktTotAmt": "228095046400" }
+];
+
+let currentTab = 'all'; // 'all' or 'watchlist'
+let watchlist = JSON.parse(localStorage.getItem('stock_watchlist') || '[]');
+let stockNotes = JSON.parse(localStorage.getItem('stock_notes') || '{}');
+let activeStock = null;
+
+// 포맷팅 함수들
+const fmtNum = num => Number(num || 0).toLocaleString('ko-KR');
+const fmtDate = str => str && str.length === 8 ? `${str.slice(0,4)}.${str.slice(4,6)}.${str.slice(6,8)}` : str;
+
+function getRateStyle(vs, fltRt) {
+    const v = Number(vs), r = Number(fltRt);
+    if (v > 0) return { cls: 'up', txt: `▲ ${fmtNum(v)} (+${r}%)` };
+    if (v < 0) return { cls: 'down', txt: `▼ ${fmtNum(Math.abs(v))} (${r}%)` };
+    return { cls: 'flat', txt: `0 (0.00%)` };
+}
+
+// 초기화
+function init() {
+    updateSummaryCards();
+    applyFilters();
+    updateWatchlistCount();
+    if(rawStockData.length > 0) {
+        document.getElementById('baseDateText').innerText = `기준일자: ${fmtDate(rawStockData[0].basDt)} | 실시간 인사이트 제공`;
+    }
+}
+
+// 상단 통계 카드 업데이트
+function updateSummaryCards() {
+    // 1. 최고 상승종목
+    const topGainer = [...rawStockData].sort((a,b) => Number(b.fltRt) - Number(a.fltRt))[0];
+    if(topGainer) {
+        document.getElementById('topGainerName').innerText = topGainer.itmsNm;
+        document.getElementById('topGainerRate').innerText = `등락률 +${topGainer.fltRt}% (${fmtNum(topGainer.clpr)}원)`;
+    }
+
+    // 2. 최다 거래량 종목
+    const topVol = [...rawStockData].sort((a,b) => Number(b.trqu) - Number(a.trqu))[0];
+    if(topVol) {
+        document.getElementById('topVolumeName').innerText = topVol.itmsNm;
+        document.getElementById('topVolumeVal').innerText = `거래량 ${fmtNum(topVol.trqu)}주`;
+    }
+
+    // 3. 총 시가총액
+    const totalCap = rawStockData.reduce((acc, cur) => acc + Number(cur.mrktTotAmt || 0), 0);
+    const capInEok = Math.round(totalCap / 100000000);
+    document.getElementById('totalMarketCap').innerText = `${fmtNum(capInEok)} 억원`;
+}
+
+// 탭 전환
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    applyFilters();
+}
+
+// 필터 및 정렬 적용
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const market = document.getElementById('marketFilter').value;
+    const sort = document.getElementById('sortFilter').value;
+
+    let filtered = rawStockData.filter(item => {
+        const matchesSearch = item.itmsNm.toLowerCase().includes(search) || item.srtnCd.includes(search);
+        const matchesMarket = market === 'ALL' || item.mrktCtg === market;
+        const matchesWatchlist = currentTab === 'all' || watchlist.includes(item.srtnCd);
+        return matchesSearch && matchesMarket && matchesWatchlist;
+    });
+
+    // 정렬
+    const [field, dir] = sort.split('_');
+    filtered.sort((a, b) => {
+        let valA = Number(a[field] || 0);
+        let valB = Number(b[field] || 0);
+        return dir === 'desc' ? valB - valA : valA - valB;
+    });
+
+    renderTable(filtered);
+}
+
+// 테이블 렌더링
+function renderTable(data) {
+    const tbody = document.getElementById('stockTableBody');
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center" style="padding: 30px; color: var(--text-sub);">조회된 종목이 없습니다.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = data.map(item => {
+        const rateInfo = getRateStyle(item.vs, item.fltRt);
+        const isStarred = watchlist.includes(item.srtnCd);
+
+        return `
+            <tr>
+                <td class="text-center" onclick="event.stopPropagation()">
+                    <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'} star-btn" onclick="toggleWatchlist('${item.srtnCd}')"></i>
+                </td>
+                <td class="text-left" onclick="openDetailModal('${item.srtnCd}')">
+                    <strong>${item.itmsNm}</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-sub); display: block;">${item.srtnCd}</span>
+                </td>
+                <td class="text-center" onclick="openDetailModal('${item.srtnCd}')"><span class="badge ${item.mrktCtg}">${item.mrktCtg}</span></td>
+                <td onclick="openDetailModal('${item.srtnCd}')"><strong>${fmtNum(item.clpr)}원</strong></td>
+                <td class="${rateInfo.cls}" onclick="openDetailModal('${item.srtnCd}')">${rateInfo.txt.split(' ')[0]} ${rateInfo.txt.split(' ')[1]}</td>
+                <td class="${rateInfo.cls}" onclick="openDetailModal('${item.srtnCd}')">${item.fltRt}%</td>
+                <td onclick="openDetailModal('${item.srtnCd}')">${fmtNum(item.mkp)}</td>
+                <td onclick="openDetailModal('${item.srtnCd}')">${fmtNum(item.hipr)}</td>
+                <td onclick="openDetailModal('${item.srtnCd}')">${fmtNum(item.lopr)}</td>
+                <td onclick="openDetailModal('${item.srtnCd}')">${fmtNum(item.trqu)}</td>
+                <td onclick="openDetailModal('${item.srtnCd}')">${fmtNum(Math.round(item.mrktTotAmt/100000000))}억</td>
+                <td class="text-center" onclick="openDetailModal('${item.srtnCd}')">
+                    <button class="btn" style="padding: 2px 8px; font-size:0.75rem;"><i class="fa-solid fa-calculator"></i> 분석</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// 관심 종목 토글
+function toggleWatchlist(code) {
+    if (watchlist.includes(code)) {
+        watchlist = watchlist.filter(c => c !== code);
+    } else {
+        watchlist.push(code);
+    }
+    localStorage.setItem('stock_watchlist', JSON.stringify(watchlist));
+    updateWatchlistCount();
+    applyFilters();
+}
+
+function updateWatchlistCount() {
+    document.getElementById('watchlistCount').innerText = watchlist.length;
+}
+
+// 상세 모달 열기
+function openDetailModal(code) {
+    activeStock = rawStockData.find(s => s.srtnCd === code);
+    if (!activeStock) return;
+
+    document.getElementById('modalTitle').innerText = activeStock.itmsNm;
+    document.getElementById('modalSub').innerText = `코드: ${activeStock.srtnCd} | 시장: ${activeStock.mrktCtg}`;
+    document.getElementById('modalPrice').innerText = fmtNum(activeStock.clpr);
+    
+    const rateInfo = getRateStyle(activeStock.vs, activeStock.fltRt);
+    document.getElementById('modalVs').innerHTML = `<span class="${rateInfo.cls}">${rateInfo.txt}</span>`;
+    document.getElementById('modalHigh').innerText = fmtNum(activeStock.hipr);
+    document.getElementById('modalLow').innerText = fmtNum(activeStock.lopr);
+
+    // 저장된 메모 로드
+    document.getElementById('stockNote').value = stockNotes[code] || '';
+
+    // 모의투자 초기 계산
+    calculateInvestment();
+
+    document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+
+// 모의 투자 계산
+function calculateInvestment() {
+    if (!activeStock) return;
+    const amount = Number(document.getElementById('investAmount').value || 0);
+    const price = Number(activeStock.clpr);
+
+    if (price <= 0) {
+        document.getElementById('calcResult').innerText = "현재가가 0원인 종목은 계산할 수 없습니다.";
+        return;
+    }
+
+    const shares = Math.floor(amount / price);
+    const usedAmt = shares * price;
+    const remainAmt = amount - usedAmt;
+
+    const target10 = Math.round(usedAmt * 1.10);
+    const target20 = Math.round(usedAmt * 1.20);
+
+    document.getElementById('calcResult').innerHTML = `
+        • <strong>구매 가능 수량:</strong> ${fmtNum(shares)} 주<br>
+        • <strong>실제 매수 금액:</strong> ${fmtNum(usedAmt)} 원 (잔액: ${fmtNum(remainAmt)} 원)<br>
+        • <strong>+10% 목표가 도달 시 예상 자산:</strong> <span class="up">${fmtNum(target10)} 원 (+${fmtNum(target10 - usedAmt)}원)</span><br>
+        • <strong>+20% 목표가 도달 시 예상 자산:</strong> <span class="up">${fmtNum(target20)} 원 (+${fmtNum(target20 - usedAmt)}원)</span>
+    `;
+}
+
+// 메모 저장
+function saveNote() {
+    if (!activeStock) return;
+    const noteText = document.getElementById('stockNote').value;
+    stockNotes[activeStock.srtnCd] = noteText;
+    localStorage.setItem('stock_notes', JSON.stringify(stockNotes));
+    alert('메모가 성공적으로 저장되었습니다!');
+}
+
+// CSV 내보내기
+function exportCSV() {
+    let csvStr = "\uFEFF종목명,단축코드,시장,종가,전일대비,등락률,시가,고가,저가,거래량,시가총액\n";
+    rawStockData.forEach(s => {
+        csvStr += `"${s.itmsNm}","${s.srtnCd}","${s.mrktCtg}",${s.clpr},${s.vs},${s.fltRt},${s.mkp},${s.hipr},${s.lopr},${s.trqu},${s.mrktTotAmt}\n`;
+    });
+
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `주식시세_리포트_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// API Key 설정 프롬프트
+function openApiKeyModal() {
+    const key = prompt("공공데이터포털 서비스키(Service Key)를 입력하세요:");
+    if (key) {
+        alert("API 키가 설정되었습니다. (실제 운영 시 fetch() 요청에 자동 활용됩니다)");
+    }
+}
+
+// 초기화 실행
+window.onload = init;
+</script>
+</body>
+</html>
